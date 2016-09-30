@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="com.hy.www.SplashScreen"
+    android:gravity="center_horizontal"
+    android:id="@+id/main"
+    >
+    <android.support.v4.view.ViewPager
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/viewPager"></android.support.v4.view.ViewPager>
+
+    <!--
+    <LinearLayout
+        android:id="@+id/viewGroup"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="40dp"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal" >
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginBottom="80dp"
+        android:layout_alignParentBottom="true"
+        >
+        <Button
+            android:layout_width="80dp"
+            android:layout_height="30dp"
+            android:textSize="12sp"
+            android:padding="0dp"
+            android:text="@string/button_index"
+            android:onClick="goIndex"
+            android:background="@drawable/shape"
+            android:textColor="@color/colorButtonText"
+            style="?android:attr/borderlessButtonStyle"
+            />
+
+        <Button
+            android:layout_width="80dp"
+            android:layout_height="30dp"
+            android:textSize="12sp"
+            android:padding="0dp"
+            android:text="@string/button_login"
+            android:onClick="goLogin"
+            android:background="@drawable/shape"
+            android:textColor="@color/colorButtonText"
+            android:layout_marginTop="10dp"
+            style="?android:attr/borderlessButtonStyle"
+            />
+    </LinearLayout>
+    -->
+</RelativeLayout>
