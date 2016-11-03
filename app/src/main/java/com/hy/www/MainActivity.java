@@ -1,34 +1,61 @@
 package com.hy.www;
 
+import android.app.Dialog;
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.provider.CalendarContract;
 import android.provider.MediaStore;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.webkit.ConsoleMessage;
 import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
+import android.widget.VideoView;
 
+import com.umeng.analytics.MobclickAgent;
 import com.zxing.activity.CaptureActivity;
 
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.net.URLEncoder;
 
 import pl.droidsonroids.gif.GifImageView;
@@ -38,8 +65,8 @@ public class MainActivity extends AppCompatActivity {
     private GifImageView loadingView;
     public static final int SCAN_CODE=1;
     public static final int FILECHOOSER_RESULTCODE=2;
-    public static final String WEB_SITE="http://yuyin.91huayi.net/";
-    public static final String WEB_SITE_SCAN="http://mobile.kjpt.91huayi.com/";
+    public static final String WEB_SITE="http://zshy.91huayi.com/";
+    public static final String WEB_SITE_SCAN="http://app.kjpt.91huayi.com/";
     private String appid="";
 
     private WebChromeClient.CustomViewCallback myCallback = null;
@@ -47,10 +74,38 @@ public class MainActivity extends AppCompatActivity {
     private WebChromeClient chromeClient = null;
     private View myView = null;
     private WebChromeClient.CustomViewCallback myCallBack = null;
+    private ProgressDialog pd;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //检查版本更新
+        CheckUpdate();
+        //发送版本号给服务端
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                HttpURLConnection httpURLConnection=null;
+                try {
+                    URL url = new URL(WEB_SITE + "Home/android_version?version=" + Build.VERSION.SDK_INT + "&flag=1");
+                    httpURLConnection=(HttpURLConnection)url.openConnection();
+                    httpURLConnection.setConnectTimeout(3000);
+                    httpURLConnection.setRequestMethod("GET");
+                    int responsecode = httpURLConnection.getResponseCode();
+
+                    if(responsecode == HttpURLConnection.HTTP_OK){
+                        httpURLConnection.getInputStream();
+                    }
+                    httpURLConnection.disconnect();
+                }catch(Exception ex){
+                    if(null!=httpURLConnection) {
+                        httpURLConnection.disconnect();
+                    }
+                    Log.d("mylog",ex.getMessage());
+                }
+            }
+        }).start();
+
         appid=Installation.id(this);
 
         loadingView=(GifImageView)findViewById(R.id.loadView);
@@ -68,20 +123,23 @@ public class MainActivity extends AppCompatActivity {
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         // 开启 DOM storage API 功能
         settings.setDomStorageEnabled(true);
-
         settings.setJavaScriptEnabled(true);
         settings.setJavaScriptCanOpenWindowsAutomatically(true);
         settings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.NARROW_COLUMNS);
+        //final String USER_AGENT_STRING = webView.getSettings().getUserAgentString() + " Rong/2.0";
+        //settings.setUserAgentString( USER_AGENT_STRING );
+        settings.setUserAgentString("Mozilla/5.0 (iPhone; CPU iPhone OS 8_0 like Mac OS X) AppleWebKit/600.1.3 (KHTML, like Gecko) Version/8.0 Mobile/12A4345d Safari/600.1.4");
+        settings.setSupportZoom(false);
+        settings.setSupportMultipleWindows(true);
+        //settings.setPluginState(WebSettings.PluginState.ON);
+        settings.setLoadWithOverviewMode(true);
         webView.setHorizontalScrollBarEnabled(false);
         webView.setVerticalScrollBarEnabled(false);
-        final String USER_AGENT_STRING = webView.getSettings().getUserAgentString() + " Rong/2.0";
-        settings.setUserAgentString( USER_AGENT_STRING );
-        settings.setSupportZoom(false);
-        settings.setPluginState(WebSettings.PluginState.ON);
-        settings.setLoadWithOverviewMode(true);
         webView.addJavascriptInterface(new JavascriptHandler(),"apploading");
-        chromeClient = new MyChromeClient();
-        webView.setWebChromeClient(chromeClient);
+        if(Build.VERSION.SDK_INT<23) {
+            chromeClient = new MyChromeClient();
+            webView.setWebChromeClient(chromeClient);
+        }
         webView.setWebViewClient(new WebViewClient(){
 
             @Override
@@ -176,6 +234,14 @@ public class MainActivity extends AppCompatActivity {
                 view.setVisibility(View.INVISIBLE);
                 super.onPageStarted(view, url, favicon);
             }
+
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                Toast toast = Toast.makeText(getApplicationContext(),"数据加载失败,请检查网络状态",Toast.LENGTH_LONG);
+                toast.setGravity(Gravity.CENTER, 0, 0);
+                toast.show();
+                //super.onReceivedError(view, request, error);
+            }
         });
         webView.loadUrl(WEB_SITE+"m/index.html");
         //webView.loadUrl("http://z.puddingz.com/t.html");
@@ -190,8 +256,6 @@ public class MainActivity extends AppCompatActivity {
             webView.loadUrl("http://yuyin.91huayi.net/m/index.html");
         }
         */
-
-
     }
 
     @Override
@@ -201,19 +265,29 @@ public class MainActivity extends AppCompatActivity {
         }
         else{
             chromeClient.onHideCustomView();
+            quitFullScreen();
         }
     }
+
 
     @Override
     protected void onResume() {
         super.onResume();
         webView.onResume();
+        MobclickAgent.onResume(this);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         webView.onPause();
+        MobclickAgent.onPause(this);
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
     }
 
     @Override
@@ -271,8 +345,155 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode,resultCode,data);
     }
 
-    public void addJavaScriptMap(Object obj, String objName){
-        webView.addJavascriptInterface(obj, objName);
+    //public void addJavaScriptMap(Object obj, String objName){
+    //    webView.addJavascriptInterface(obj, objName);
+    //}
+
+    public void CheckUpdate(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                HttpURLConnection httpURLConnection=null;
+                try {
+                    PackageManager pm = getPackageManager();
+                    PackageInfo info = pm.getPackageInfo(getPackageName(),0);
+                    URL url = new URL("http://z.puddingz.com/t.aspx?versioncode="+info.versionCode);
+                    httpURLConnection=(HttpURLConnection)url.openConnection();
+                    httpURLConnection.setConnectTimeout(3000);
+                    httpURLConnection.setRequestMethod("GET");
+                    int responsecode = httpURLConnection.getResponseCode();
+
+                    if(responsecode == HttpURLConnection.HTTP_OK){
+                        InputStream is = httpURLConnection.getInputStream();
+                        ByteArrayOutputStream os = new ByteArrayOutputStream();
+                        int len=0;
+                        byte buffer[] = new byte[1024];
+                        while ((len = is.read(buffer)) != -1) {
+                            os.write(buffer, 0, len);
+                        }
+                        is.close();
+                        os.close();
+                        String result = new String(os.toByteArray());
+                        if(result.length()>0){
+                            final JSONObject json = new JSONObject(result);
+                            if(json.getInt("update")==1){ //有更新
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        try {
+                                            Dialog dialog = new AlertDialog.Builder(MainActivity.this)
+                                                    .setTitle("发现新版本"+json.getString("new_version"))
+                                                    .setMessage(json.getString("update_log"))
+                                                    .setPositiveButton("立即更新", new DialogInterface.OnClickListener() {
+                                                        @Override
+                                                        public void onClick(DialogInterface dialog,
+                                                                            int which) {
+                                                            dialog.dismiss();
+                                                            pd=new ProgressDialog(MainActivity.this);
+                                                            pd.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                                                            pd.setTitle("下载中...");
+                                                            pd.setCancelable(false);
+                                                            pd.show();
+                                                            new Thread(new Runnable() {
+                                                                @Override
+                                                                public void run() {
+                                                                    final File file = DownAPK(json);
+                                                                    runOnUiThread(new Runnable() {
+                                                                        @Override
+                                                                        public void run() {
+                                                                            pd.dismiss();
+                                                                            InstallApk(file);
+                                                                        }
+                                                                    });
+                                                                }
+                                                            }).start();
+                                                        }
+                                                    })
+                                                    .setNegativeButton("以后再说", new DialogInterface.OnClickListener() {
+                                                        public void onClick(DialogInterface dialog,
+                                                                            int whichButton) {
+                                                            dialog.dismiss();
+                                                        }
+                                                    })
+                                                    .setCancelable(false)
+                                                    .create();
+
+                                            dialog.show();
+                                        }catch (Exception ex){
+                                            Log.d("mylog",ex.getMessage());
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    }
+                    httpURLConnection.disconnect();
+
+                }catch(Exception ex){
+                    if(null!=httpURLConnection) {
+                        httpURLConnection.disconnect();
+                    }
+                }
+            }
+        }).start();
+    }
+    private File DownAPK(JSONObject json){
+        try{
+            URL url = new URL(json.getString("apk_url"));
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setConnectTimeout(5000);
+            conn.setRequestMethod("GET");
+            int code = conn.getResponseCode();
+            if ( code == 200 ) {
+                int fileSize = conn.getContentLength()/1024;
+                pd.setMax(fileSize);
+                int total = 0;
+                InputStream is = conn.getInputStream();
+                File file = new File(Environment.getExternalStorageDirectory(),"hyapp_"+json.getString("new_version")+".apk");
+                FileOutputStream fos = new FileOutputStream(file);
+                byte[] buffer = new byte[1024];
+                int len = 0;
+                while ( (len = is.read(buffer)) != -1 ) {
+                    fos.write(buffer, 0, len);
+                    total += (len/1024);
+                    pd.setProgress(total);
+                }
+                fos.flush();
+                fos.close();
+                is.close();
+                return file;
+            }else{
+                return null;
+            }
+        }catch (Exception ex){
+            Log.d("mylog",ex.getMessage());
+            return null;
+        }
+    }
+    private void InstallApk(File file){
+        if(null==file){return;}
+        Intent intent = new Intent();
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.setAction("android.intent.action.VIEW");
+        intent.addCategory("android.intent.category.DEFAULT");
+        intent.setDataAndType(Uri.fromFile(file), "application/vnd.android.package-archive");
+        startActivity(intent);
+        android.os.Process.killProcess(android.os.Process.myPid());
+    }
+    //设置全屏
+    public void setFullScreen(){
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        if (Build.VERSION.SDK_INT>=14){
+            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE);
+        }
+    }
+    //退出全屏
+    public void quitFullScreen(){
+        final WindowManager.LayoutParams attrs = getWindow().getAttributes();
+        attrs.flags &= (~WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getWindow().setAttributes(attrs);
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
     }
 
     private ValueCallback<Uri> mUploadMessage;
@@ -283,6 +504,12 @@ public class MainActivity extends AppCompatActivity {
 
     public class MyChromeClient extends WebChromeClient{
         private int mOriginalOrientation = 1;
+        private int dip2px(Context context, float dipValue)
+        {
+            Resources r = context.getResources();
+            return (int) TypedValue.applyDimension(
+                    TypedValue.COMPLEX_UNIT_DIP, dipValue, r.getDisplayMetrics());
+        }
 
         @Override
         public void onShowCustomView(View view, CustomViewCallback callback) {
@@ -290,23 +517,40 @@ public class MainActivity extends AppCompatActivity {
                 callback.onCustomViewHidden();
                 return;
             }
-            frameLayout.removeView(webView);
+            //frameLayout.removeView(webView);
+            webView.setVisibility(View.GONE);
             frameLayout.addView(view);
+            RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams)view.getLayoutParams();
+            lp.width=dip2px(MainActivity.this,frameLayout.getWidth());
+            lp.height=dip2px(MainActivity.this,frameLayout.getHeight());
+            view.setLayoutParams(lp);
             myView = view;
             myCallBack = callback;
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+            //全屏
+            setFullScreen();
+            chromeClient=this;
         }
         @Override
         public void onHideCustomView() {
             if(myView == null){
                 return;
             }
+
+            if(myCallback!=null) {
+                myCallBack.onCustomViewHidden();
+                myCallback=null;
+            }
+
             frameLayout.removeView(myView);
             myView = null;
-            frameLayout.addView(webView);
-            myCallBack.onCustomViewHidden();
+            //frameLayout.addView(webView);
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            webView.setVisibility(View.VISIBLE);
+            //退出全屏
+            quitFullScreen();
         }
+
         @Override
         public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
             // TODO Auto-generated method stub

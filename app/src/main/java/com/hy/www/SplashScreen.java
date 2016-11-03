@@ -17,6 +17,8 @@ import android.widget.Gallery;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
+import com.umeng.analytics.MobclickAgent;
+
 import java.util.ArrayList;
 
 public class SplashScreen extends AppCompatActivity {
@@ -37,6 +39,9 @@ public class SplashScreen extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash_screen);
+        MobclickAgent.setDebugMode(true);
+
+
         boolean isFirst=isFirstEnter(SplashScreen.this,SplashScreen.this.getClass().getName());
         if(isFirst) {
             viewPager=(ViewPager)findViewById(R.id.viewPager);

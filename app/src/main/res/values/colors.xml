@@ -5,7 +5,7 @@
     <color name="colorAccent">#FF4081</color>
     <color name="colorButton">#AAAAAA</color>
     <color name="colorButtonText">#FFFFFF</color>
-    <color name="colorLoadingBg">#ffffff</color>
+    <color name="colorLoadingBg">#FFFFFF</color>
     <color name="contents_text">#ff000000</color>
     <color name="encode_view">#ffffffff</color>
     <color name="help_button_view">#ffcccccc</color>
