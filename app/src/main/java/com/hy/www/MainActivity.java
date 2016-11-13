@@ -79,9 +79,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //Toast.makeText(getApplicationContext(),"2.0版本来啦",Toast.LENGTH_LONG).show();
         //检查版本更新
         CheckUpdate();
         //发送版本号给服务端
+        /*
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -105,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }).start();
-
+        */
         appid=Installation.id(this);
 
         loadingView=(GifImageView)findViewById(R.id.loadView);
@@ -357,7 +359,8 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     PackageManager pm = getPackageManager();
                     PackageInfo info = pm.getPackageInfo(getPackageName(),0);
-                    URL url = new URL("http://z.puddingz.com/t.aspx?versioncode="+info.versionCode);
+                    Log.d("mylog",info.versionCode+"");
+                    URL url = new URL(WEB_SITE+"home/CheckVersion?versioncode="+info.versionCode);
                     httpURLConnection=(HttpURLConnection)url.openConnection();
                     httpURLConnection.setConnectTimeout(3000);
                     httpURLConnection.setRequestMethod("GET");
@@ -449,7 +452,7 @@ public class MainActivity extends AppCompatActivity {
                 pd.setMax(fileSize);
                 int total = 0;
                 InputStream is = conn.getInputStream();
-                File file = new File(Environment.getExternalStorageDirectory(),"hyapp_"+json.getString("new_version")+".apk");
+                File file = new File(this.getExternalCacheDir(),"hyapp_"+json.getString("new_version")+".apk");
                 FileOutputStream fos = new FileOutputStream(file);
                 byte[] buffer = new byte[1024];
                 int len = 0;
