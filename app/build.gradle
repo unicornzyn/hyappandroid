@@ -5,11 +5,11 @@ android {
     buildToolsVersion "24.0.1"
 
     defaultConfig {
-        applicationId "com.hy.www"
+        applicationId "com.huayi.cme"
         minSdkVersion 17
         targetSdkVersion 24
-        versionCode 2
-        versionName "1.0"
+        versionCode 9
+        versionName "2.1"
     }
     buildTypes {
         release {
@@ -20,14 +20,15 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:24.2.0'
     compile 'pl.droidsonroids.gif:android-gif-drawable:1.2.1'
-    /**zxing二维码生成与识别核心库**/
+    /** zxing二维码生成与识别核心库 **/
     compile 'com.google.zxing:core:latest.integration'
-    /**zxing二维码扫描for Android核心库**/
+    /** zxing二维码扫描for Android核心库 **/
     compile 'com.google.zxing:android-core:latest.integration'
     /*友盟*/
     compile 'com.umeng.analytics:analytics:latest.integration'
+    compile files('libs/alipaySdk-20160825.jar')
 }

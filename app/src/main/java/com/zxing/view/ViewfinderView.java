@@ -29,7 +29,7 @@ import android.util.AttributeSet;
 import android.view.View;
 
 import com.google.zxing.ResultPoint;
-import com.hy.www.R;
+import com.huayi.cme.R;
 import com.zxing.camera.CameraManager;
 
 /**

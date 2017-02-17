@@ -1,4 +1,4 @@
-package com.hy.www;
+package com.huayi.cme;
 
 import org.junit.Test;
 

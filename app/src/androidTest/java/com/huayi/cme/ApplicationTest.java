@@ -1,4 +1,4 @@
-package com.hy.www;
+package com.huayi.cme;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

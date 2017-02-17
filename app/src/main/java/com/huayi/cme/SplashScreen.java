@@ -1,4 +1,4 @@
-package com.hy.www;
+package com.huayi.cme;
 
 import android.content.Context;
 import android.content.Intent;
@@ -9,11 +9,9 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Gallery;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
@@ -158,7 +156,7 @@ public class SplashScreen extends AppCompatActivity {
                             break;
                         case ViewPager.SCROLL_STATE_IDLE:
                             if (viewPager.getCurrentItem() == viewPager.getAdapter().getCount() - 1 && !misScrolled) {
-                                SharedPreferences sharedPreferences=SplashScreen.this.getSharedPreferences(SHAREDPREFERENCES_NAME, Context.MODE_WORLD_READABLE);
+                                SharedPreferences sharedPreferences=SplashScreen.this.getSharedPreferences(SHAREDPREFERENCES_NAME, MODE_PRIVATE);
                                 SharedPreferences.Editor editor=sharedPreferences.edit();
                                 editor.putString(KEY_GUIDE_ACTIVITY,"false");
                                 editor.commit();
@@ -214,7 +212,7 @@ public class SplashScreen extends AppCompatActivity {
 
     private boolean isFirstEnter(Context context, String className){
         if(context==null || className==null||"".equalsIgnoreCase(className))return false;
-        SharedPreferences sharedPreferences=context.getSharedPreferences(SHAREDPREFERENCES_NAME, Context.MODE_WORLD_READABLE);
+        SharedPreferences sharedPreferences=context.getSharedPreferences(SHAREDPREFERENCES_NAME, MODE_PRIVATE);
         String mResultStr =
                 sharedPreferences.getString(KEY_GUIDE_ACTIVITY, "");//取得所有类名 如 com.my.MainActivity
         if(mResultStr.equalsIgnoreCase("false")) {

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.hy.www">
+    package="com.huayi.cme">
     <uses-sdk android:minSdkVersion="19" android:targetSdkVersion="24"></uses-sdk>
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
@@ -29,12 +29,12 @@
         android:hardwareAccelerated="true"
         android:largeHeap="true">
         <activity
-            android:name=".MainActivity"
+            android:name="com.huayi.cme.MainActivity"
             android:screenOrientation="portrait"
             android:hardwareAccelerated="true"
-            android:configChanges="orientation|keyboardHidden|navigation|screenSize"/>
+            android:configChanges="orientation|keyboardHidden|navigation|screenSize" />
         <activity
-            android:name=".SplashScreen"
+            android:name="com.huayi.cme.SplashScreen"
             android:screenOrientation="portrait"
             android:exported="true"
             >
@@ -42,6 +42,7 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+
             </intent-filter>
         </activity>
         <activity
@@ -49,9 +50,22 @@
             android:configChanges="orientation|keyboardHidden"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="stateAlwaysHidden" />
-        <activity android:name=".ViewPager1" />
-        <activity android:name=".ViewPager2" />
-        <activity android:name=".ViewPager3"></activity>
+        <activity android:name="com.huayi.cme.ViewPager1" />
+        <activity android:name="com.huayi.cme.ViewPager2" />
+        <activity android:name="com.huayi.cme.ViewPager3"></activity>
+
+        <activity
+            android:name="com.alipay.sdk.app.H5PayActivity"
+            android:configChanges="orientation|keyboardHidden|navigation"
+            android:exported="false"
+            android:screenOrientation="behind" >
+        </activity>
+        <activity
+            android:name="com.alipay.sdk.auth.AuthActivity"
+            android:configChanges="orientation|keyboardHidden|navigation"
+            android:exported="false"
+            android:screenOrientation="behind" >
+        </activity>
 
         <meta-data android:value="581aecfa310c93076000300e" android:name="UMENG_APPKEY"></meta-data>
     </application>

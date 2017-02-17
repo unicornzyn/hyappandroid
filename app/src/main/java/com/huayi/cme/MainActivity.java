@@ -1,4 +1,4 @@
-package com.hy.www;
+package com.huayi.cme;
 
 import android.app.Dialog;
 import android.app.ProgressDialog;
@@ -10,28 +10,22 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
-import android.os.Handler;
-import android.os.Message;
-import android.provider.CalendarContract;
 import android.provider.MediaStore;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.webkit.ConsoleMessage;
 import android.webkit.JavascriptInterface;
-import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
@@ -40,11 +34,12 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
-import android.widget.VideoView;
 
+import com.alipay.sdk.app.PayTask;
+import com.alipay.sdk.pay.demo.H5PayDemoActivity;
+import com.alipay.sdk.util.H5PayResultModel;
 import com.umeng.analytics.MobclickAgent;
 import com.zxing.activity.CaptureActivity;
 
@@ -66,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
     public static final int SCAN_CODE=1;
     public static final int FILECHOOSER_RESULTCODE=2;
     public static final String WEB_SITE="http://zshy.91huayi.com/";
+    //public static final String WEB_SITE="http://cg.91huayi.net/";
     public static final String WEB_SITE_SCAN="http://app.kjpt.91huayi.com/";
     private String appid="";
 
@@ -132,6 +128,7 @@ public class MainActivity extends AppCompatActivity {
         //settings.setUserAgentString( USER_AGENT_STRING );
         settings.setUserAgentString("Mozilla/5.0 (iPhone; CPU iPhone OS 8_0 like Mac OS X) AppleWebKit/600.1.3 (KHTML, like Gecko) Version/8.0 Mobile/12A4345d Safari/600.1.4");
         settings.setSupportZoom(false);
+        //settings.setBuiltInZoomControls(true);
         settings.setSupportMultipleWindows(true);
         //settings.setPluginState(WebSettings.PluginState.ON);
         settings.setLoadWithOverviewMode(true);
@@ -211,11 +208,39 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                if ((WEB_SITE_SCAN+"AppScan.aspx").equalsIgnoreCase(url)){
+            public boolean shouldOverrideUrlLoading(final WebView view, String url) {
+                //Log.d("mylog1",url);
+                if(url.contains("alipay")){
+                    try {
+                        final PayTask task = new PayTask(MainActivity.this);
+                        final String ex = task.fetchOrderInfoFromH5PayUrl(url);
+                        if (!TextUtils.isEmpty(ex)) {
+                            //Log.d("mylog1",url);
+                            new Thread(new Runnable() {
+                                public void run() {
+                                    //Log.d("payTask:::", ex);
+                                    final H5PayResultModel result = task.h5Pay(ex, true);
+                                    if (!TextUtils.isEmpty(result.getReturnUrl())) {
+                                        MainActivity.this.runOnUiThread(new Runnable() {
+
+                                            @Override
+                                            public void run() {
+                                                view.loadUrl(result.getReturnUrl());
+                                            }
+                                        });
+                                    }
+                                }
+                            }).start();
+                        }else {
+                            view.loadUrl(url);
+                        }
+                        //Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                        //startActivity(intent);
+                    }catch(Exception e){ Log.d("mylog",e.getMessage());return true;}
+                }else if ((WEB_SITE_SCAN+"AppScan.aspx").equalsIgnoreCase(url)){
                     Intent intent=new Intent(MainActivity.this, CaptureActivity.class);
                     startActivityForResult(intent,SCAN_CODE);
-                }if((WEB_SITE_SCAN+"GetAppId.aspx").equalsIgnoreCase(url)){
+                }else if((WEB_SITE_SCAN+"GetAppId.aspx").equalsIgnoreCase(url)){
                      view.loadUrl(WEB_SITE_SCAN+"GetAppIdReceive.aspx?para="+appid);
                 }else {
                     view.loadUrl(url);

@@ -7,7 +7,7 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.hy.www.SplashScreen"
+    tools:context="com.huayi.cme.SplashScreen"
     android:gravity="center_horizontal"
     android:id="@+id/main"
     >

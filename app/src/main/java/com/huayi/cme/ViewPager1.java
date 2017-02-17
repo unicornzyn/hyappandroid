@@ -1,13 +1,14 @@
-package com.hy.www;
+package com.huayi.cme;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
-public class ViewPager3 extends AppCompatActivity {
+public class ViewPager1 extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_view_pager3);
+        setContentView(R.layout.activity_view_pager1);
+
     }
 }
