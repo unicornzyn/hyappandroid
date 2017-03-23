@@ -5,4 +5,5 @@
     <string name="loading">加载中...</string>
     <string name="scantips">请扫描二维码</string>
     <string name="cancel">取消</string>
+    <string name="title_activity_wxpay_entry">WXPayEntryActivity</string>
 </resources>

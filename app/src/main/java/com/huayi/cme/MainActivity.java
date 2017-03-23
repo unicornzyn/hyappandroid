@@ -1,10 +1,13 @@
 package com.huayi.cme;
 
+import android.annotation.TargetApi;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -24,6 +27,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.webkit.ClientCertRequest;
 import android.webkit.ConsoleMessage;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
@@ -40,6 +44,10 @@ import android.widget.Toast;
 import com.alipay.sdk.app.PayTask;
 import com.alipay.sdk.pay.demo.H5PayDemoActivity;
 import com.alipay.sdk.util.H5PayResultModel;
+import com.huayi.cme.wxapi.WXPayEntryActivity;
+import com.tencent.mm.opensdk.modelpay.PayReq;
+import com.tencent.mm.opensdk.openapi.IWXAPI;
+import com.tencent.mm.opensdk.openapi.WXAPIFactory;
 import com.umeng.analytics.MobclickAgent;
 import com.zxing.activity.CaptureActivity;
 
@@ -56,13 +64,20 @@ import java.net.URLEncoder;
 import pl.droidsonroids.gif.GifImageView;
 
 public class MainActivity extends AppCompatActivity {
+    private IWXAPI api;
     private WebView webView;
     private GifImageView loadingView;
     public static final int SCAN_CODE=1;
     public static final int FILECHOOSER_RESULTCODE=2;
+
     public static final String WEB_SITE="http://zshy.91huayi.com/";
-    //public static final String WEB_SITE="http://cg.91huayi.net/";
     public static final String WEB_SITE_SCAN="http://app.kjpt.91huayi.com/";
+    public static final String WEB_SITE_WXPAY="http://pay.91huayi.com/";
+
+    //public static final String WEB_SITE="http://zshytest.91huayi.net/";
+    //public static final String WEB_SITE_SCAN="http://app.kjpt.91huayi.com/";
+    //public static final String WEB_SITE_WXPAY="http://zhifucme.91huayi.net/";
+
     private String appid="";
 
     private WebChromeClient.CustomViewCallback myCallback = null;
@@ -71,6 +86,9 @@ public class MainActivity extends AppCompatActivity {
     private View myView = null;
     private WebChromeClient.CustomViewCallback myCallBack = null;
     private ProgressDialog pd;
+
+    private String returnurl;
+    private String errorurl;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -105,6 +123,8 @@ public class MainActivity extends AppCompatActivity {
         }).start();
         */
         appid=Installation.id(this);
+
+        api = WXAPIFactory.createWXAPI(this, WXPayEntryActivity.APP_ID);
 
         loadingView=(GifImageView)findViewById(R.id.loadView);
         ViewGroup.LayoutParams  lm = loadingView.getLayoutParams();
@@ -207,45 +227,17 @@ public class MainActivity extends AppCompatActivity {
                 return super.shouldInterceptRequest(view, url);
             }
 
+            @TargetApi(Build.VERSION_CODES.N)
+            @Override
+            public boolean shouldOverrideUrlLoading(final WebView view, WebResourceRequest request) {
+                final String url = request.getUrl().toString();
+                return handleUri(view,url);
+            }
+            @SuppressWarnings("deprecation")
             @Override
             public boolean shouldOverrideUrlLoading(final WebView view, String url) {
                 //Log.d("mylog1",url);
-                if(url.contains("alipay")){
-                    try {
-                        final PayTask task = new PayTask(MainActivity.this);
-                        final String ex = task.fetchOrderInfoFromH5PayUrl(url);
-                        if (!TextUtils.isEmpty(ex)) {
-                            //Log.d("mylog1",url);
-                            new Thread(new Runnable() {
-                                public void run() {
-                                    //Log.d("payTask:::", ex);
-                                    final H5PayResultModel result = task.h5Pay(ex, true);
-                                    if (!TextUtils.isEmpty(result.getReturnUrl())) {
-                                        MainActivity.this.runOnUiThread(new Runnable() {
-
-                                            @Override
-                                            public void run() {
-                                                view.loadUrl(result.getReturnUrl());
-                                            }
-                                        });
-                                    }
-                                }
-                            }).start();
-                        }else {
-                            view.loadUrl(url);
-                        }
-                        //Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                        //startActivity(intent);
-                    }catch(Exception e){ Log.d("mylog",e.getMessage());return true;}
-                }else if ((WEB_SITE_SCAN+"AppScan.aspx").equalsIgnoreCase(url)){
-                    Intent intent=new Intent(MainActivity.this, CaptureActivity.class);
-                    startActivityForResult(intent,SCAN_CODE);
-                }else if((WEB_SITE_SCAN+"GetAppId.aspx").equalsIgnoreCase(url)){
-                     view.loadUrl(WEB_SITE_SCAN+"GetAppIdReceive.aspx?para="+appid);
-                }else {
-                    view.loadUrl(url);
-                }
-                return true;
+                return handleUri(view,url);
             }
 
             @Override
@@ -269,13 +261,22 @@ public class MainActivity extends AppCompatActivity {
                 toast.show();
                 //super.onReceivedError(view, request, error);
             }
+
+
         });
-        webView.loadUrl(WEB_SITE+"m/index.html");
+        try {
+            PackageManager pm = getPackageManager();
+            PackageInfo info = pm.getPackageInfo(getPackageName(), 0);
+            webView.loadUrl(WEB_SITE + "Home/androidversion?version=" +info.versionCode ); //m/index.html
+        }catch (Exception ex){}
         //webView.loadUrl("http://z.puddingz.com/t.html");
         if(savedInstanceState != null){
             webView.restoreState(savedInstanceState);
         }
 
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction("action.wxpayoff");
+        registerReceiver(mRefreshBroadcastReceiver, intentFilter);
         /*
        if(Integer.parseInt(s)==0) {
             webView.loadUrl("http://yuyin.91huayi.net/m/#/login");
@@ -284,7 +285,78 @@ public class MainActivity extends AppCompatActivity {
         }
         */
     }
+    private BroadcastReceiver mRefreshBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action.equals("action.wxpayoff"))
+            {
+                wxpayoff();
+            }
+        }
+    };
+    private void wxpayoff(){
+        webView.loadUrl(returnurl);
+    }
+    private boolean handleUri(final WebView view,final String url){
+        if(url.contains("alipay")){
+            try {
+                final PayTask task = new PayTask(MainActivity.this);
+                final String ex = task.fetchOrderInfoFromH5PayUrl(url);
+                if (!TextUtils.isEmpty(ex)) {
+                    //Log.d("mylog1",url);
+                    new Thread(new Runnable() {
+                        public void run() {
+                            //Log.d("payTask:::", ex);
+                            final H5PayResultModel result = task.h5Pay(ex, true);
+                            if (!TextUtils.isEmpty(result.getReturnUrl())) {
+                                MainActivity.this.runOnUiThread(new Runnable() {
 
+                                    @Override
+                                    public void run() {
+                                        view.loadUrl(result.getReturnUrl());
+                                    }
+                                });
+                            }
+                        }
+                    }).start();
+                }else {
+                    view.loadUrl(url);
+                }
+                //Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                //startActivity(intent);
+            }catch(Exception e){ Log.d("mylog",e.getMessage());return true;}
+        }else if ((WEB_SITE_SCAN+"AppScan.aspx").equalsIgnoreCase(url)){
+            Intent intent=new Intent(MainActivity.this, CaptureActivity.class);
+            startActivityForResult(intent,SCAN_CODE);
+        }else if((WEB_SITE_SCAN+"GetAppId.aspx").equalsIgnoreCase(url)){
+            view.loadUrl(WEB_SITE_SCAN+"GetAppIdReceive.aspx?para="+appid);
+        }else if(url.contains(WEB_SITE_WXPAY+"wx_pay.aspx")){
+            Uri uri = Uri.parse(url);
+            api.registerApp(WXPayEntryActivity.APP_ID);
+            if(api.isWXAppInstalled()) {
+                PayReq req = new PayReq();
+
+                req.appId = uri.getQueryParameter("appid");
+                req.partnerId = uri.getQueryParameter("partnerid");
+                req.prepayId = uri.getQueryParameter("prepayid");
+                req.nonceStr = uri.getQueryParameter("noncestr");
+                req.timeStamp = uri.getQueryParameter("timestamp");
+                req.packageValue = uri.getQueryParameter("package");
+                req.sign = uri.getQueryParameter("sign");
+                returnurl=uri.getQueryParameter("return_url");
+                errorurl=uri.getQueryParameter("error_backurl");
+                //req.extData = "app data"; // optional
+                api.sendReq(req);
+            }else{
+                Toast.makeText(MainActivity.this, "请先安装微信", Toast.LENGTH_SHORT).show();
+                view.loadUrl(errorurl);
+            }
+        }else {
+            view.loadUrl(url);
+        }
+        return true;
+    }
     @Override
     public void onBackPressed() {
         if(myView == null){
@@ -314,7 +386,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
+        super.onDestroy();unregisterReceiver(mRefreshBroadcastReceiver);
     }
 
     @Override
