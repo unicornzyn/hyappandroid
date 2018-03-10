@@ -3,7 +3,8 @@
     <string name="button_index">跳转首页</string>
     <string name="button_login">登录</string>
     <string name="loading">加载中...</string>
-    <string name="scantips">请扫描二维码</string>
+    <string name="scantips">请扫描\"%1$s\"</string>
+    <string name="countdown">扫码倒计时:300秒</string>
     <string name="cancel">取消</string>
     <string name="title_activity_wxpay_entry">WXPayEntryActivity</string>
 </resources>

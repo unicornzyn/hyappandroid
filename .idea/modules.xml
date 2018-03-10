@@ -3,6 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/faceplatform-release/faceplatform-release.iml" filepath="$PROJECT_DIR$/faceplatform-release/faceplatform-release.iml" />
+      <module fileurl="file://$PROJECT_DIR$/faceplatform-ui/faceplatform-ui.iml" filepath="$PROJECT_DIR$/faceplatform-ui/faceplatform-ui.iml" />
       <module fileurl="file://$PROJECT_DIR$/hyapp.iml" filepath="$PROJECT_DIR$/hyapp.iml" />
     </modules>
   </component>

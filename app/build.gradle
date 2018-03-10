@@ -8,8 +8,13 @@ android {
         applicationId "com.huayi.cme"
         minSdkVersion 17
         targetSdkVersion 24
-        versionCode 11
-        versionName "2.3"
+        versionCode 14
+        versionName "2.6"
+        manifestPlaceholders = [
+                JPUSH_PKGNAME : applicationId,
+                JPUSH_APPKEY : "efc31ec956ebef1d120333e3", //JPush上注册的包名对应的appkey.
+                JPUSH_CHANNEL : "developer-default", //暂时填写默认值即可.
+        ]
     }
     buildTypes {
         release {
@@ -17,11 +22,30 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    signingConfigs {
+
+        def alias = '华医网'
+        def password = 'www.91huayi.com'
+        def filePath = '/Users/mac/Desktop/huayi_app_keystore.keystore'
+        debug {
+            keyAlias alias
+            keyPassword password
+            storeFile file(filePath)
+            storePassword(password)
+        }
+        release {
+            keyAlias alias
+            keyPassword password
+            storeFile file(filePath)
+            storePassword(password)
+        }
+    }
 }
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    
+
     /** zxing二维码生成与识别核心库  **/
     /** zxing二维码扫描for Android核心库  **/
     /*友盟*/
@@ -33,5 +57,12 @@ dependencies {
     compile 'com.google.zxing:android-core:latest.integration'
     compile 'com.umeng.analytics:analytics:latest.integration'
     compile 'com.android.support:design:24.2.1'
+    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha9'
     testCompile 'junit:junit:4.12'
+    /*jpush*/
+    compile 'cn.jiguang.sdk:jpush:3.0.9'
+    compile 'cn.jiguang.sdk:jcore:1.1.7'
+    /*baidu faceai*/
+    compile project(path: ':faceplatform-ui')
+    compile 'com.squareup.okhttp3:okhttp:3.6.0'
 }

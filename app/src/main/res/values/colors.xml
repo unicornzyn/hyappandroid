@@ -29,7 +29,7 @@
     <color name="transparent">#00000000</color>
     <color name="viewfinder_frame">#ff000000</color>
     <color name="viewfinder_laser">#ffff0000</color>
-    <color name="viewfinder_mask">#60000000</color>
+    <color name="viewfinder_mask">#90000000</color>
     <color name="header">#58567D</color>
     <color name="grgray">#686868</color>
     <!-- A light Holo shade of blue -->

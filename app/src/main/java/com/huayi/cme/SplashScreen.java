@@ -19,6 +19,8 @@ import com.umeng.analytics.MobclickAgent;
 
 import java.util.ArrayList;
 
+import cn.jpush.android.api.JPushInterface;
+
 public class SplashScreen extends AppCompatActivity {
     public final static String EXTRA_MESSAGE = "com.hy.www.hyapp.MESSAGE";
     public static Runnable runnable;
@@ -37,7 +39,12 @@ public class SplashScreen extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash_screen);
-        MobclickAgent.setDebugMode(true);
+
+        //jpush
+        JPushInterface.setDebugMode(true);
+        JPushInterface.init(this);
+
+        MobclickAgent.setDebugMode(false);
 
 
         boolean isFirst=isFirstEnter(SplashScreen.this,SplashScreen.this.getClass().getName());

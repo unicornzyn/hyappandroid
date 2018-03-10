@@ -6,11 +6,13 @@ import java.util.Vector;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Vibrator;
 import android.view.SurfaceHolder;
@@ -19,15 +21,22 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.Result;
+import com.huayi.cme.MyApplication;
 import com.huayi.cme.R;
+import com.huayi.cme.models.QRCodeTimeoutResponseResult;
+import com.huayi.cme.parser.QRCodeTimeoutParser;
+import com.huayi.cme.utils.OnResultListener;
 import com.zxing.camera.CameraManager;
 import com.zxing.decoding.CaptureActivityHandler;
 import com.zxing.decoding.InactivityTimer;
 import com.zxing.view.ViewfinderView;
+import com.huayi.cme.utils.HttpUtil;
+
 /**
  * Initial the camera
  * @author Ryan.Tang
@@ -45,6 +54,9 @@ public class CaptureActivity extends Activity implements Callback {
 	private static final float BEEP_VOLUME = 0.10f;
 	private boolean vibrate;
 	private Button cancelScanButton;
+	private TextView txt_countdown;
+	private CountDownTimer timer;
+	private int totalseconds = 0;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -57,6 +69,47 @@ public class CaptureActivity extends Activity implements Callback {
 		cancelScanButton = (Button) this.findViewById(R.id.btn_cancel_scan);
 		hasSurface = false;
 		inactivityTimer = new InactivityTimer(this);
+		Resources res = getResources();
+		String text = String.format(res.getString(R.string.scantips), "考勤二维码");
+		TextView txt_scantips = (TextView)findViewById(R.id.txt_scantips);
+		txt_scantips.setText(text);
+		txt_countdown = (TextView)findViewById(R.id.txt_countdown);
+		if(getIntent().getStringExtra("source").equals("BaiDuAI")){
+			QRCodeTimeoutParser parser = new QRCodeTimeoutParser();
+			HttpUtil.getInstance().getScanQRCodeTimeOut(((MyApplication)getApplication()).getWebSiteScan()+"handler/GetFaceOutTime.ashx", parser, new OnResultListener<QRCodeTimeoutResponseResult>(){
+				@Override
+				public void onResult(QRCodeTimeoutResponseResult result) {
+					totalseconds = result.getTimeout();
+					timer = new CountDownTimer(totalseconds * 1000 , 1000){
+						@Override
+						public void onTick(long millisUntilFinished) {
+							txt_countdown.setText("扫码倒计时:"+(totalseconds--)+"秒");
+						}
+
+						@Override
+						public void onFinish() {
+							Intent resultIntent = new Intent();
+							Bundle bundle = new Bundle();
+							bundle.putString("result", "");
+							bundle.putString("over", "yes");
+							bundle.putString("source",getIntent().getStringExtra("source"));
+							resultIntent.putExtras(bundle);
+							CaptureActivity.this.setResult(RESULT_OK, resultIntent);
+							CaptureActivity.this.finish();
+						}
+					};
+					timer.start();
+				}
+
+				@Override
+				public void onError(QRCodeTimeoutResponseResult error) {
+
+				}
+			});
+
+		}else{
+			txt_countdown.setText("");
+		}
 	}
 
 	@Override
@@ -116,6 +169,9 @@ public class CaptureActivity extends Activity implements Callback {
 	 * @param barcode
 	 */
 	public void handleDecode(Result result, Bitmap barcode) {
+		if(timer != null){
+			timer.cancel();
+		}
 		inactivityTimer.onActivity();
 		playBeepSoundAndVibrate();
 		String resultString = result.getText();
@@ -128,6 +184,8 @@ public class CaptureActivity extends Activity implements Callback {
 			Intent resultIntent = new Intent();
 			Bundle bundle = new Bundle();
 			bundle.putString("result", resultString);
+			bundle.putString("over", "");
+			bundle.putString("source",getIntent().getStringExtra("source"));
 			resultIntent.putExtras(bundle);
 			this.setResult(RESULT_OK, resultIntent);
 		}
