@@ -23,11 +23,32 @@ public class FaceDetectExpActivity extends FaceDetectActivity {
     private DefaultDialog mDefaultDialog;
     public static String TAG = "mylog";
     private CountDownTimer timer;
+    private int timeout;
+    private CountDownTimer timer2;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         HttpUtil.getInstance().init();
+        timeout = getIntent().getIntExtra("timeout",0);
+        timer2 = new CountDownTimer((timeout + 1) * 1000 , 1000){
+            @Override
+            public void onTick(long millisUntilFinished) {
+                //txt_countdown.setText("倒计时:"+(totalseconds--)+"秒");
+                FaceDetectExpActivity.super.mTipsBottomTimeoutView.setText("倒计时:"+(--timeout)+"秒");
+                if(timeout==0){
+                    setResultIntent("restartscancode");
+                    finish();
+                }
+            }
+
+            @Override
+            public void onFinish() {
+                setResultIntent("restartscancode");
+                finish();
+            }
+        };
+        timer2.start();
     }
 
     @Override
@@ -36,6 +57,7 @@ public class FaceDetectExpActivity extends FaceDetectActivity {
         if (status == FaceStatusEnum.OK && mIsCompletion) {
             //showMessageDialog("人脸图像采集", "采集成功");
             //super.mTipsTopView.setText("检测成功");
+            timer2.cancel();
             String bestimageBase64 = base64ImageMap.get("bestImage0");
             final String idnumber = getIntent().getStringExtra("idnumber");
             ResponseParser parser = new ResponseParser();
@@ -65,16 +87,18 @@ public class FaceDetectExpActivity extends FaceDetectActivity {
                                                     break;
                                                 case 4:
                                                     timer.cancel();
-                                                    Intent resultIntent = new Intent();
-                                                    Bundle bundle = new Bundle();
-                                                    bundle.putString("opt", "startscancode");
-                                                    resultIntent.putExtras(bundle);
-                                                    FaceDetectExpActivity.this.setResult(RESULT_OK, resultIntent);
+                                                    setResultIntent("facesuccess");
                                                     finish();
                                                     break;
                                                 case 5:
                                                     timer.cancel();
-                                                    showMessageDialog("系统提示", "验证未通过");
+                                                    showMessageDialog("系统提示", result2.getErrMsg(),true);
+                                                    break;
+                                                case 6:
+                                                    break;
+                                                case 7:
+                                                    timer.cancel();
+                                                    showMessageDialog("系统提示", "人脸识别失败");
                                                     break;
                                                 default:
                                                     timer.cancel();
@@ -89,13 +113,7 @@ public class FaceDetectExpActivity extends FaceDetectActivity {
                                             showMessageDialog("系统错误", "系统错误，请重试");
                                         }
                                     });
-                                    /*
-                                    Intent resultIntent = new Intent();
-			Bundle bundle = new Bundle();
-			bundle.putString("result", resultString);
-			resultIntent.putExtras(bundle);
-			this.setResult(RESULT_OK, resultIntent);
-                                     */
+
                                 }
 
                                 @Override
@@ -132,6 +150,11 @@ public class FaceDetectExpActivity extends FaceDetectActivity {
 
     private void showMessageDialog(String title, final String message) {
 
+        showMessageDialog(title,message,false);
+    }
+
+    private void showMessageDialog(String title, final String message, final boolean isrestartbaiduai) {
+
         if (mDefaultDialog == null) {
             DefaultDialog.Builder builder = new DefaultDialog.Builder(this);
             builder.setTitle(title).
@@ -143,14 +166,9 @@ public class FaceDetectExpActivity extends FaceDetectActivity {
                                     mDefaultDialog.dismiss();
 
                                     //如果验证未通过，点击知道了之后继续人脸识别
-                                    if(message.equals("验证未通过")){
-                                        Intent resultIntent = new Intent();
-                                        Bundle bundle = new Bundle();
-                                        bundle.putString("opt", "restartbaiduai");
-                                        resultIntent.putExtras(bundle);
-                                        FaceDetectExpActivity.this.setResult(RESULT_OK, resultIntent);
+                                    if(isrestartbaiduai){
+                                        setResultIntent("restartbaiduai");
                                     }
-
                                     finish();
                                 }
                             });
@@ -161,6 +179,14 @@ public class FaceDetectExpActivity extends FaceDetectActivity {
         mDefaultDialog.show();
     }
 
+    private void setResultIntent(String opt){
+        Intent resultIntent = new Intent();
+        Bundle bundle = new Bundle();
+        bundle.putString("opt", opt);
+        bundle.putInt("timeout",timeout);
+        resultIntent.putExtras(bundle);
+        FaceDetectExpActivity.this.setResult(RESULT_OK, resultIntent);
+    }
     @Override
     public void finish() {
         super.finish();

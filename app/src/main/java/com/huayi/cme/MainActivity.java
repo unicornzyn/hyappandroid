@@ -123,6 +123,7 @@ public class MainActivity extends AppCompatActivity {
     private ValueCallback<Uri[]> mValueCallback;
 
     private String idnumber;
+    private int timeout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -403,15 +404,16 @@ public class MainActivity extends AppCompatActivity {
                 //startActivity(intent);
             }catch(Exception e){ Log.d(TAG,e.getMessage());return true;}
         }else if (url.contains(WEB_SITE_SCAN+"AppScanning.aspx")){
-            webView.goBack();
+            view.loadUrl(WEB_SITE_SCAN+"Index.htm");
             requestPermissions(REQUEST_CAMERA_3, android.Manifest.permission.CAMERA);
         }else if ((WEB_SITE_SCAN+"AppScaningProj.aspx").equalsIgnoreCase(url)){
-            webView.goBack();
+            view.loadUrl(WEB_SITE_SCAN+"Index.htm");
             requestPermissions(REQUEST_CAMERA_1, android.Manifest.permission.CAMERA);
         }else if (url.contains(WEB_SITE+"face.html")) { //人脸识别
-            webView.goBack();
+            view.loadUrl(WEB_SITE_SCAN+"Index.htm");
             Uri uri = Uri.parse(url);
             idnumber = uri.getQueryParameter("cardid");
+            timeout = Integer.valueOf(uri.getQueryParameter("timeout")).intValue();
             if(idnumber.length()>0) {
                 requestPermissions(REQUEST_CAMERA, android.Manifest.permission.CAMERA);
             }else{
@@ -496,6 +498,7 @@ public class MainActivity extends AppCompatActivity {
                     //Intent faceIntent = new Intent(MainActivity.this, FaceLivenessExpActivity.class);
                     Intent faceIntent = new Intent(MainActivity.this, FaceDetectExpActivity.class);
                     faceIntent.putExtra("idnumber", idnumber);
+                    faceIntent.putExtra("timeout",timeout);
                     startActivityForResult(faceIntent, BaiDuAI);
                 }
                 break;
@@ -600,14 +603,15 @@ public class MainActivity extends AppCompatActivity {
             case BaiDuAI:
                 if(resultCode==RESULT_OK){
                     String opt = data.getStringExtra("opt");
-                    if(opt.equals("startscancode")) {
-                        Intent intent = new Intent(MainActivity.this, CaptureActivity.class);
-                        intent.putExtra("source", "BaiDuAI");
-                        startActivityForResult(intent, SCAN_CODE);
+                    if(opt.equals("facesuccess")) {
+                        webView.loadUrl(WEB_SITE_SCAN+"SaveScan.aspx");
                     }else if(opt.equals("restartbaiduai")){
                         Intent faceIntent = new Intent(MainActivity.this, FaceDetectExpActivity.class);
                         faceIntent.putExtra("idnumber", idnumber);
+                        faceIntent.putExtra("timeout", data.getIntExtra("timeout",0));
                         startActivityForResult(faceIntent, BaiDuAI);
+                    }else if(opt.equals("restartscancode")){
+                        requestPermissions(REQUEST_CAMERA_3, android.Manifest.permission.CAMERA);
                     }
                 }
             case FILECHOOSER_RESULTCODE:

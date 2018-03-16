@@ -71,6 +71,7 @@ public class FaceDetectActivity extends Activity implements
     protected ImageView mSuccessView;
     protected TextView mTipsTopView;
     protected TextView mTipsBottomView;
+    protected TextView mTipsBottomTimeoutView;
     protected FaceDetectRoundView mFaceDetectRoundView;
     protected LinearLayout mImageLayout;
     // 人脸信息
@@ -163,6 +164,7 @@ public class FaceDetectActivity extends Activity implements
         });
         mTipsTopView = (TextView) mRootView.findViewById(R.id.detect_top_tips);
         mTipsBottomView = (TextView) mRootView.findViewById(R.id.detect_bottom_tips);
+        mTipsBottomTimeoutView = (TextView)mRootView.findViewById(R.id.detect_timeout_tips);
         mSuccessView = (ImageView) mRootView.findViewById(R.id.detect_success_image);
 
         mImageLayout = (LinearLayout) mRootView.findViewById(R.id.detect_result_image_layout);
