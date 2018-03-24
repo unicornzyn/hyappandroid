@@ -52,4 +52,5 @@
     <color name="holo_orange_dark">#ffff8800</color>
     <!-- A really bright Holo shade of blue -->
     <color name="holo_blue_bright">#ff00ddff</color>
+    <color name="upload_button_bg_color">#159ce7</color>
 </resources>

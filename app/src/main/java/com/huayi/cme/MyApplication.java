@@ -17,18 +17,23 @@ public class MyApplication extends Application {
 
     //url参数
     //production
-    //private String webSite="http://zshy.91huayi.com/";
-    //private String webSiteScan="http://app.kjpt.91huayi.com/";
-    //private String webSiteWxpay="http://pay.91huayi.com/";
-    //private String webSiteAI="http://111.204.10.248/";
+
+    private String webSite="http://zshy.91huayi.com/";
+    private String webSiteScan="http://app.kjpt.91huayi.com/";
+    private String webSiteWxpay="http://pay.91huayi.com/";
+    private String webSiteAI="http://wxsdkj.91huayi.com/FaceRecognition/";
+    private String webSitePhoto="http://cert.91huayi.com/";
 
     //dev
+    /*
     private String webSite="http://zshytest.91huayi.net/";
     private String webSiteScan="http://mobile.kjpt.91huayi.com/";
     private String webSiteWxpay="http://zhifucme.91huayi.net/";
-    private String webSiteAI="http://hydbapp.91huayi.net/";
-
+    private String webSiteAI="http://hydbapp.91huayi.net/FaceRecognition/";
+    private String webSitePhoto="http://hydbapp.91huayi.net/FaceRecognitionPhoto/";
+    */
     //百度人脸识别设置
+
     public static final float VALUE_BRIGHTNESS = 40.0F;
     public static final float VALUE_BLURNESS = 0.7F;
     public static final float VALUE_OCCLUSION = 0.6F;
@@ -62,6 +67,8 @@ public class MyApplication extends Application {
     public String getWebSiteAI(){
         return webSiteAI;
     }
+
+    public String getWebSitePhoto(){return webSitePhoto;}
 
 
     private void setBaiduAIConfig(){

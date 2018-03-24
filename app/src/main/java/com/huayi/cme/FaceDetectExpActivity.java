@@ -24,6 +24,7 @@ public class FaceDetectExpActivity extends FaceDetectActivity {
     public static String TAG = "mylog";
     private CountDownTimer timer;
     private int timeout;
+    private String parakey;
     private CountDownTimer timer2;
 
     @Override
@@ -61,7 +62,7 @@ public class FaceDetectExpActivity extends FaceDetectActivity {
             String bestimageBase64 = base64ImageMap.get("bestImage0");
             final String idnumber = getIntent().getStringExtra("idnumber");
             ResponseParser parser = new ResponseParser();
-            HttpUtil.getInstance().uploadPhoto(((MyApplication)getApplication()).getWebSiteAI()+"FaceRecognition/api/UploadPhotoClient",idnumber,bestimageBase64,parser,new OnResultListener<ResponseResult>(){
+            HttpUtil.getInstance().uploadPhoto(((MyApplication)getApplication()).getWebSiteAI()+"api/UploadPhotoClient",idnumber,bestimageBase64,parser,new OnResultListener<ResponseResult>(){
                 @Override
                 public void onResult(final ResponseResult result) {
                     switch (result.getErrorCode()){
@@ -71,7 +72,7 @@ public class FaceDetectExpActivity extends FaceDetectActivity {
                                 @Override
                                 public void onTick(long millisUntilFinished) {
                                     ResponseParser parser = new ResponseParser();
-                                    HttpUtil.getInstance().queryPhotoValid(((MyApplication) getApplication()).getWebSiteAI() + "FaceRecognition/api/QueryPhotoValidateAjax", idnumber, parser, new OnResultListener<ResponseResult>() {
+                                    HttpUtil.getInstance().queryPhotoValid(((MyApplication) getApplication()).getWebSiteAI() + "api/QueryPhotoValidateAjax", idnumber, parser, new OnResultListener<ResponseResult>() {
                                         @Override
                                         public void onResult(ResponseResult result2) {
                                             switch (result2.getErrorCode()){
@@ -127,7 +128,7 @@ public class FaceDetectExpActivity extends FaceDetectActivity {
                             showMessageDialog("系统提示", result.getErrMsg());
                             break;
                         case 3:
-                            showMessageDialog("系统提示", "您还未进行人脸认证，请进行认证。");
+                            showMessageDialog("系统提示", "您还未进行人脸建档，请进行认证。");
                             break;
                         default:
                             showMessageDialog("系统提示", result.getErrMsg());
@@ -183,6 +184,7 @@ public class FaceDetectExpActivity extends FaceDetectActivity {
         Intent resultIntent = new Intent();
         Bundle bundle = new Bundle();
         bundle.putString("opt", opt);
+        bundle.putString("parakey",parakey);
         bundle.putInt("timeout",timeout);
         resultIntent.putExtras(bundle);
         FaceDetectExpActivity.this.setResult(RESULT_OK, resultIntent);

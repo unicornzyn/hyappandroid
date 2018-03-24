@@ -209,4 +209,57 @@ public class HttpUtil {
         });
     }
 
+    public <T> void queryCertValid(String path,String token,String cert_id,final Parser<T> parser,final OnResultListener listener){
+        String url = path+"?token="+token+"&cert_id="+cert_id;
+        Log.d("mylog", "queryCertValid: "+url);
+        final Request request = new Request.Builder()
+                .url(url)
+                .build();
+        if (client == null) {
+            ResponseResult err = new ResponseResult(-1, "okhttp inner error");
+            listener.onError(err);
+            return;
+        }
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
+                final ResponseResult error = new ResponseResult(-2,
+                        e.getMessage());
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        listener.onError(error);
+                    }
+                });
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String responseString = response.body().string();
+
+                Log.d("mylog", "onResponse json->" + responseString);
+                final T result;
+                try {
+                    result = parser.parse(responseString);
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            listener.onResult(result);
+                        }
+                    });
+                } catch (final Exception faceError) {
+                    faceError.printStackTrace();
+                    final ResponseResult r = new ResponseResult(-5,faceError.getMessage());
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            listener.onError(r);
+                        }
+                    });
+                }
+            }
+        });
+
+    }
 }

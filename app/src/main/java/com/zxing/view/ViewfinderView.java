@@ -23,6 +23,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.util.AttributeSet;
@@ -53,6 +54,8 @@ public final class ViewfinderView extends View {
   private Collection<ResultPoint> possibleResultPoints;
   private Collection<ResultPoint> lastPossibleResultPoints;
 
+  private int slideTop;
+
   // This constructor is used when the class is built from an XML resource.
   public ViewfinderView(Context context, AttributeSet attrs) {
     super(context, attrs);
@@ -67,6 +70,8 @@ public final class ViewfinderView extends View {
     resultPointColor = resources.getColor(R.color.possible_result_points);
     scannerAlpha = 0;
     possibleResultPoints = new HashSet<ResultPoint>(5);
+
+    slideTop = 0;
   }
 
   @Override
@@ -85,6 +90,27 @@ public final class ViewfinderView extends View {
     canvas.drawRect(frame.right + 1, frame.top, width, frame.bottom + 1, paint);
     canvas.drawRect(0, frame.bottom + 1, width, height, paint);
 
+    float density = getContext().getResources().getDisplayMetrics().density;
+    int ScreenRate = (int) (15 * density);
+    float CORNER_WIDTH = 5;
+    paint.setColor(Color.GREEN);
+    canvas.drawRect(frame.left, frame.top, frame.left + ScreenRate,
+            frame.top + CORNER_WIDTH, paint);
+    canvas.drawRect(frame.left, frame.top, frame.left + CORNER_WIDTH,
+            frame.top + ScreenRate, paint);
+    canvas.drawRect(frame.right - ScreenRate, frame.top, frame.right,
+            frame.top + CORNER_WIDTH, paint);
+    canvas.drawRect(frame.right - CORNER_WIDTH, frame.top, frame.right,
+            frame.top + ScreenRate, paint);
+    canvas.drawRect(frame.left, frame.bottom - CORNER_WIDTH, frame.left
+            + ScreenRate, frame.bottom, paint);
+    canvas.drawRect(frame.left, frame.bottom - ScreenRate, frame.left
+            + CORNER_WIDTH, frame.bottom, paint);
+    canvas.drawRect(frame.right - ScreenRate, frame.bottom
+            - CORNER_WIDTH, frame.right, frame.bottom, paint);
+    canvas.drawRect(frame.right - CORNER_WIDTH, frame.bottom
+            - ScreenRate, frame.right, frame.bottom, paint);
+
     if (resultBitmap != null) {
       // Draw the opaque result bitmap over the scanning rectangle
       paint.setAlpha(OPAQUE);
@@ -100,10 +126,19 @@ public final class ViewfinderView extends View {
 
       // Draw a red "laser scanner" line through the middle to show decoding is active
       paint.setColor(laserColor);
+      /*
+      //红色扫描线中间位置闪烁
       paint.setAlpha(SCANNER_ALPHA[scannerAlpha]);
       scannerAlpha = (scannerAlpha + 1) % SCANNER_ALPHA.length;
       int middle = frame.height() / 2 + frame.top;
       canvas.drawRect(frame.left + 2, middle - 1, frame.right - 1, middle + 2, paint);
+       */
+      //红色扫描线滚动
+      if(frame.top+slideTop>= frame.bottom+3){
+          slideTop = 0;
+      }
+      slideTop+=10;
+      canvas.drawRect(frame.left + 2, frame.top+slideTop, frame.right - 1, frame.top+slideTop+3, paint);
 
       Collection<ResultPoint> currentPossible = possibleResultPoints;
       Collection<ResultPoint> currentLast = lastPossibleResultPoints;

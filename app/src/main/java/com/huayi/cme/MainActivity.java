@@ -57,6 +57,7 @@ import com.tencent.mm.opensdk.openapi.IWXAPI;
 import com.tencent.mm.opensdk.openapi.WXAPIFactory;
 import com.umeng.analytics.MobclickAgent;
 import com.zxing.activity.CaptureActivity;
+import com.huayi.cme.UploadActivity;
 
 import org.json.JSONObject;
 
@@ -92,7 +93,10 @@ public class MainActivity extends AppCompatActivity {
     public static final int REQUEST_CAMERA_1 = 100; //扫描二维码用-因为设置授权后回调
     public static final int REQUEST_CAMERA_2 = 101; //相册那用-请求授权后不做操作
     public static final int REQUEST_CAMERA_3 = 102; //扫描二维码考勤用-
+    public static final int REQUEST_CAMERA_4 = 103; //人脸认证-
+    public static final int REQUEST_WRITE_EXTERNAL_STORAGE = 201; //存储卡写入权限
     public static final int BaiDuAI=250;
+    public static final int UploadPhoto = 6;
     public static boolean isForeground = false;
 
     public static final String TAG = "mylog"; //日志输出标记
@@ -100,6 +104,8 @@ public class MainActivity extends AppCompatActivity {
     public String WEB_SITE;
     public String WEB_SITE_SCAN;
     public String WEB_SITE_WXPAY;
+    public String WEB_SITE_AI;
+    public String WEB_SITE_PHOTO;
 
     //for receive customer msg from jpush server
     public static final String MESSAGE_RECEIVED_ACTION = "com.example.jpushdemo.MESSAGE_RECEIVED_ACTION";
@@ -124,6 +130,9 @@ public class MainActivity extends AppCompatActivity {
 
     private String idnumber;
     private int timeout;
+    private String token;
+    private String parakey;
+    private String tip_msg;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -134,11 +143,14 @@ public class MainActivity extends AppCompatActivity {
         WEB_SITE = app.getWebSite();
         WEB_SITE_SCAN = app.getWebSiteScan();
         WEB_SITE_WXPAY = app.getWebSiteWxpay();
+        WEB_SITE_AI = app.getWebSiteAI();
+        WEB_SITE_PHOTO = app.getWebSitePhoto();
 
         requestPermissions(REQUEST_READ_PHONE_STATE, android.Manifest.permission.READ_PHONE_STATE);
 
         if(Build.VERSION.SDK_INT>=19){
             isNotificationEnabled(this); //判断通知栏是否开启
+            //requestPermissions(REQUEST_WRITE_EXTERNAL_STORAGE, android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
         }
 
 
@@ -410,18 +422,26 @@ public class MainActivity extends AppCompatActivity {
             view.loadUrl(WEB_SITE_SCAN+"Index.htm");
             requestPermissions(REQUEST_CAMERA_1, android.Manifest.permission.CAMERA);
         }else if (url.contains(WEB_SITE+"face.html")) { //人脸识别
-            view.loadUrl(WEB_SITE_SCAN+"Index.htm");
             Uri uri = Uri.parse(url);
             idnumber = uri.getQueryParameter("cardid");
             timeout = Integer.valueOf(uri.getQueryParameter("timeout")).intValue();
+            parakey = uri.getQueryParameter("parakey");
             if(idnumber.length()>0) {
                 requestPermissions(REQUEST_CAMERA, android.Manifest.permission.CAMERA);
             }else{
                 Toast.makeText(MainActivity.this, "未获取到身份证号", Toast.LENGTH_SHORT).show();
             }
-
+            view.loadUrl(WEB_SITE_SCAN+"Index.htm");
         }else if((WEB_SITE_SCAN+"GetAppId.aspx").equalsIgnoreCase(url)){
             view.loadUrl(WEB_SITE_SCAN+"GetAppIdReceive.aspx?para="+appid);
+        }else if(url.contains(WEB_SITE_PHOTO+"api/CertUpload/")){
+            Uri uri = Uri.parse(url);
+            token = uri.getQueryParameter("token");
+            idnumber = uri.getQueryParameter("cert_id");
+            parakey = uri.getQueryParameter("parakey");
+            tip_msg = uri.getQueryParameter("tip_msg");
+            view.loadUrl(WEB_SITE_SCAN+"Index.htm");
+            requestPermissions(REQUEST_WRITE_EXTERNAL_STORAGE,android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
         }else if(url.contains(WEB_SITE_WXPAY+"wx_pay.aspx")){
             Uri uri = Uri.parse(url);
             api.registerApp(WXPayEntryActivity.APP_ID);
@@ -493,12 +513,16 @@ public class MainActivity extends AppCompatActivity {
             case REQUEST_READ_PHONE_STATE:
                 appid=Installation.id(this);
                 break;
+            case REQUEST_WRITE_EXTERNAL_STORAGE:
+                requestPermissions(REQUEST_CAMERA_4,android.Manifest.permission.CAMERA);
+                break;
             case REQUEST_CAMERA:
                 if(idnumber!=null&&idnumber.length()>0){
                     //Intent faceIntent = new Intent(MainActivity.this, FaceLivenessExpActivity.class);
                     Intent faceIntent = new Intent(MainActivity.this, FaceDetectExpActivity.class);
                     faceIntent.putExtra("idnumber", idnumber);
                     faceIntent.putExtra("timeout",timeout);
+                    faceIntent.putExtra("parakey", parakey);
                     startActivityForResult(faceIntent, BaiDuAI);
                 }
                 break;
@@ -512,6 +536,14 @@ public class MainActivity extends AppCompatActivity {
                 intent2.putExtra("source","AppScanning");
                 startActivityForResult(intent2,SCAN_CODE);
                 break;
+            case REQUEST_CAMERA_4:
+                Intent faceIntent = new Intent(MainActivity.this, UploadActivity.class);
+                faceIntent.putExtra("token", token);
+                faceIntent.putExtra("cert_id", idnumber);
+                faceIntent.putExtra("parakey", parakey);
+                faceIntent.putExtra("tip_msg",tip_msg);
+                startActivityForResult(faceIntent, UploadPhoto);
+                break;
         }
     }
     //请求权限
@@ -523,12 +555,20 @@ public class MainActivity extends AppCompatActivity {
                     int hasPer = checkSelfPermission(permission);
                     if (hasPer != PackageManager.PERMISSION_GRANTED) {
                         // 是否应该显示权限请求
+                        /*
                         boolean isShould = shouldShowRequestPermissionRationale(permission);
+                        if(requestCode == REQUEST_WRITE_EXTERNAL_STORAGE || requestCode == REQUEST_READ_PHONE_STATE){
+                            isShould = true;
+                        }
+
                         if(isShould){
+                            //ActivityCompat.requestPermissions(this, new String[]{permission},requestCode);
                             requestPermissions(new String[]{permission}, requestCode);
                         }else{
-                            Toast.makeText(MainActivity.this, "请打开掌上华医的摄像头权限", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, "请手动开启掌上华医需要的权限信息", Toast.LENGTH_LONG).show();
                         }
+                        */
+                        requestPermissions(new String[]{permission}, requestCode);
                     }else{
                         getPermissionDo(requestCode);
                     }
@@ -556,13 +596,13 @@ public class MainActivity extends AppCompatActivity {
                 case REQUEST_READ_PHONE_STATE:
                     requestPermissions(requestCode, Manifest.permission.READ_PHONE_STATE);
                     break;
+                case REQUEST_WRITE_EXTERNAL_STORAGE:
+                    requestPermissions(requestCode, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+                    break;
                 case REQUEST_CAMERA:
-                    requestPermissions(requestCode, android.Manifest.permission.CAMERA);
-                    break;
                 case REQUEST_CAMERA_1:
-                    requestPermissions(requestCode, android.Manifest.permission.CAMERA);
-                    break;
                 case REQUEST_CAMERA_3:
+                case REQUEST_CAMERA_4:
                     requestPermissions(requestCode, android.Manifest.permission.CAMERA);
                     break;
             }
@@ -604,7 +644,7 @@ public class MainActivity extends AppCompatActivity {
                 if(resultCode==RESULT_OK){
                     String opt = data.getStringExtra("opt");
                     if(opt.equals("facesuccess")) {
-                        webView.loadUrl(WEB_SITE_SCAN+"SaveScan.aspx");
+                        webView.loadUrl(WEB_SITE_SCAN+"SaveScan.aspx?parakey="+parakey);
                     }else if(opt.equals("restartbaiduai")){
                         Intent faceIntent = new Intent(MainActivity.this, FaceDetectExpActivity.class);
                         faceIntent.putExtra("idnumber", idnumber);
@@ -614,6 +654,12 @@ public class MainActivity extends AppCompatActivity {
                         requestPermissions(REQUEST_CAMERA_3, android.Manifest.permission.CAMERA);
                     }
                 }
+                break;
+            case UploadPhoto:
+                if(resultCode==RESULT_OK) {
+                    webView.loadUrl(WEB_SITE_SCAN + "MiddleFaceVilidate.aspx?parakey=" + parakey);
+                }
+                break;
             case FILECHOOSER_RESULTCODE:
                 if(resultCode == android.app.Activity.RESULT_CANCELED){
                     Log.d(TAG, "onActivityResult: ");
