@@ -8,8 +8,8 @@ android {
         applicationId "com.huayi.cme"
         minSdkVersion 17
         targetSdkVersion 24
-        versionCode 14
-        versionName "2.6"
+        versionCode 15
+        versionName "2.7"
         manifestPlaceholders = [
                 JPUSH_PKGNAME: applicationId,
                 JPUSH_APPKEY : "efc31ec956ebef1d120333e3", //JPush上注册的包名对应的appkey.

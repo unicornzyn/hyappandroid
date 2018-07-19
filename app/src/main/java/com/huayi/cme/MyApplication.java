@@ -18,7 +18,8 @@ public class MyApplication extends Application {
     //url参数
     //production
 
-    private String webSite="http://zshy.91huayi.com/";
+    private String webSite="https://zshy.91huayi.com/";
+    private String webSiteFace="https://zshy.91huayi.com/";
     private String webSiteScan="http://app.kjpt.91huayi.com/";
     private String webSiteWxpay="http://pay.91huayi.com/";
     private String webSiteAI="http://wxsdkj.91huayi.com/FaceRecognition/";
@@ -27,6 +28,7 @@ public class MyApplication extends Application {
     //dev
     /*
     private String webSite="http://zshytest.91huayi.net/";
+    private String webSiteFace="http://zshytest.91huayi.net/";
     private String webSiteScan="http://mobile.kjpt.91huayi.com/";
     private String webSiteWxpay="http://zhifucme.91huayi.net/";
     private String webSiteAI="http://hydbapp.91huayi.net/FaceRecognition/";
@@ -55,6 +57,8 @@ public class MyApplication extends Application {
     public String getWebSite(){
         return webSite;
     }
+
+    public String getWebSiteFace() {return webSiteFace;}
 
     public String getWebSiteScan(){
         return webSiteScan;

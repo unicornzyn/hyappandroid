@@ -102,6 +102,7 @@ public class MainActivity extends AppCompatActivity {
     public static final String TAG = "mylog"; //日志输出标记
 
     public String WEB_SITE;
+    public String WEB_SITE_FACE;
     public String WEB_SITE_SCAN;
     public String WEB_SITE_WXPAY;
     public String WEB_SITE_AI;
@@ -141,10 +142,13 @@ public class MainActivity extends AppCompatActivity {
 
         MyApplication app = (MyApplication) this.getApplication();
         WEB_SITE = app.getWebSite();
+        WEB_SITE_FACE = app.getWebSiteFace();
         WEB_SITE_SCAN = app.getWebSiteScan();
         WEB_SITE_WXPAY = app.getWebSiteWxpay();
         WEB_SITE_AI = app.getWebSiteAI();
         WEB_SITE_PHOTO = app.getWebSitePhoto();
+
+
 
         requestPermissions(REQUEST_READ_PHONE_STATE, android.Manifest.permission.READ_PHONE_STATE);
 
@@ -421,7 +425,7 @@ public class MainActivity extends AppCompatActivity {
         }else if ((WEB_SITE_SCAN+"AppScaningProj.aspx").equalsIgnoreCase(url)){
             view.loadUrl(WEB_SITE_SCAN+"Index.htm");
             requestPermissions(REQUEST_CAMERA_1, android.Manifest.permission.CAMERA);
-        }else if (url.contains(WEB_SITE+"face.html")) { //人脸识别
+        }else if (url.contains(WEB_SITE_FACE+"face.html")) { //人脸识别
             Uri uri = Uri.parse(url);
             idnumber = uri.getQueryParameter("cardid");
             timeout = Integer.valueOf(uri.getQueryParameter("timeout")).intValue();
